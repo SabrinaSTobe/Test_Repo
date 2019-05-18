@@ -1,31 +1,32 @@
 import requests
+import pandas
+from itertools import zip_longest
+import csv
 from bs4 import BeautifulSoup
 
-#define url
-test_url='https://www.michaels.com/liquitex-pouring-medium/D016943S.html'
 
-#connecting to url and gets us the html content
-response=requests.get(test_url)
+colnames=['url_id','urls', 'title_selector', 'price_selector','availibility_selector']
+data=pandas.read_csv('url_defs_for_test.csv', names=colnames)
+url_ids=data.url_id.tolist()
+urls=data.urls.tolist()
+title_def=data.title_selector.tolist()
+price_def=data.price_selector.tolist()
+avail_def=data.availibility_selector.tolist()
 
-#parse html frm url w/ boosoo and store as object soup
-soup= BeautifulSoup(response.text, "html.parser")
 
+for (a,b,c,d) in zip_longest(urls, title_def, price_def, avail_def):
+    response=requests.get(str(a))
+    soup= BeautifulSoup(response.text, "html.parser")
+    name_box_2=soup.select(str(b))
+    name_2_single=name_box_2.pop()
+    name_2=name_2_single.text.strip()
+    price_box_2=soup.select(str(c))
+    price_2_test= price_box_2.pop()
+    price_2=price_2_test.text.strip()
+    avail_box_2=soup.select(str(d))
+    avail_2_single=avail_box_2.pop()
+    avail_2=avail_2_single.text.strip()
+    print("\n\nProduct title: "+name_2)
+    print("\nPrice found: " +price_2)
+    print("\nAvailability: " +avail_2)
 
-#getting name, price, availability. searches parsed html for the elements
-name_box= soup.find('h1', attrs={'class':'product-name fetch-for-sp-name clearfix'})
-price_box_1 = soup.find('div', attrs={'class':'product-sales-price'})
-price_box_2=soup.select("#product-details-update > div.product-sticky-header.hide > div > div.header-right > div > div.product-pricing > div.product-sales-price")
-avail_box= soup.find('button',attrs={'id':'add-to-cart'})
-
-#defining title, prices, and availability as variables
-name= name_box.text.strip()
-price_1= price_box_1.text.strip()
-price_2_test= price_box_2.pop() #when pull html w/ select, treated as list
-price_2=price_2_test.text.strip()
-avail=avail_box.text.strip() 
-
-#printing variables
-print("\nProduct title: "+name)
-print("\nPrice found using attr: " + price_1)
-print("\nPrice found with CSS selector: " +price_2)
-print("\nAvailability: " +avail)
