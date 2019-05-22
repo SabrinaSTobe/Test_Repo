@@ -1,3 +1,4 @@
+import datetime
 import requests
 import pandas
 from itertools import zip_longest
@@ -14,19 +15,45 @@ price_def=data.price_selector.tolist()
 avail_def=data.availibility_selector.tolist()
 
 
+pull_prices=[]
+pull_titles=[]
+pull_avail=[]
+
 for (a,b,c,d) in zip_longest(urls, title_def, price_def, avail_def):
     response=requests.get(str(a))
     soup= BeautifulSoup(response.text, "html.parser")
     name_box_2=soup.select(str(b))
-    name_2_single=name_box_2.pop()
-    name_2=name_2_single.text.strip()
+    if len(name_box_2)==0:
+        name_2="No title found"
+        pull_titles.append(name_2)
+    else:
+        name_2_single=name_box_2.pop()
+        name_2=name_2_single.text.strip()
+        pull_titles.append(name_2)
     price_box_2=soup.select(str(c))
-    price_2_test= price_box_2.pop()
-    price_2=price_2_test.text.strip()
+    if len(price_box_2)==0:
+        price_2="No price found"
+        pull_prices.append(price_2)
+    else:
+        price_2_test= price_box_2.pop()
+        price_2=price_2_test.text.strip()
+        pull_prices.append(price_2)
     avail_box_2=soup.select(str(d))
-    avail_2_single=avail_box_2.pop()
-    avail_2=avail_2_single.text.strip()
+    if len(avail_box_2)==0:
+        avail_2="No availibility found"
+        pull_avail.append(avail_2)
+    else:
+        avail_2_single=avail_box_2.pop()
+        avail_2=avail_2_single.text.strip()
+        pull_avail.append(avail_2)
+
     print("\n\nProduct title: "+name_2)
     print("\nPrice found: " +price_2)
     print("\nAvailability: " +avail_2)
+    print(datetime.datetime.now())
+
+print("\n\n")
+print(pull_titles)
+print(pull_prices)
+print(pull_avail)
 
