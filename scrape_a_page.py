@@ -57,3 +57,8 @@ print(pull_titles)
 print(pull_prices)
 print(pull_avail)
 
+data['result_title']=pull_titles
+data['request_price']=pull_prices
+data['request_avail']=pull_avail
+
+data.to_csv('request_checked.csv')
