@@ -18,6 +18,7 @@ avail_def=data.availibility_selector.tolist()
 pull_prices=[]
 pull_titles=[]
 pull_avail=[]
+pull_time=[]
 
 for (a,b,c,d) in zip_longest(urls, title_def, price_def, avail_def):
     response=requests.get(str(a))
@@ -46,7 +47,8 @@ for (a,b,c,d) in zip_longest(urls, title_def, price_def, avail_def):
         avail_2_single=avail_box_2.pop()
         avail_2=avail_2_single.text.strip()
         pull_avail.append(avail_2)
-
+    timestamp=datetime.datetime.now()
+    pull_time.append(timestamp)
     print("\n\nProduct title: "+name_2)
     print("\nPrice found: " +price_2)
     print("\nAvailability: " +avail_2)
@@ -60,5 +62,6 @@ print(pull_avail)
 data['result_title']=pull_titles
 data['request_price']=pull_prices
 data['request_avail']=pull_avail
+data['request_time']=pull_time
 
 data.to_csv('request_checked.csv')
