@@ -1,63 +1,82 @@
+from __future__ import print_function
 import datetime
 import requests
 import pandas
-from itertools import zip_longest
-import csv
 from bs4 import BeautifulSoup
-from numpy import array
-from numpy import vstack
+import mysql.connector as mysql
 
+#connecting to mysql db
+mydb=mysql.connect(
+    host='localhost',
+    user='sabrinastobe',
+    password='T0bewanken0bi!',
+    database='test_it'
+)
 
-data_CSV=pandas.read_csv('url_defs_for_test.csv')
-url_ids=data_CSV.url_id.tolist()
-urls=data_CSV.urls.tolist()
-title_def=data_CSV.title_selector.tolist()
-price_def=data_CSV.price_selector.tolist()
-avail_def=data_CSV.availibility_selector.tolist()
+print(mydb)
 
-total_results=[["Url_Id", "Title_found","Last_price","Last_availability","Last_checked"]]
-for (a,b,c,d) in zip_longest(urls, title_def, price_def, avail_def):
+#saying that we will be using sql queries
+mycursor=mydb.cursor()
+
+#the query to execute
+mycursor.execute("SELECT url_id,url,title_selector,price_selector,avail_selector FROM urls_for_testing")
+#executing said query
+myresult = mycursor.fetchall()
+
+#making a list of all the entries by rows
+product_selector_list=[]
+for x in myresult:
+    txt=x
+    product_row=list(txt)
+    product_selector_list.append(product_row)
+
+total_results=[]
+for i in product_selector_list:
+    product_element=i
     results_per_url=[]
-    url_id=url_ids.pop(0) # this is bad code bc shortens the list every time rather than just using the next element in the list
-    results_per_url.append(url_id)
-    response=requests.get(str(a))
+    url_id_element=product_element[0]
+    results_per_url.append(url_id_element)
+    response=requests.get(str(product_element[1]))
     soup= BeautifulSoup(response.text, "html.parser")
-    name_box_2=soup.select(str(b))
-    if len(name_box_2)==0:
-        name_2="No title found"
-        results_per_url.append(name_2)
+    name_box=soup.select(str(product_element[2]))
+    if len(name_box)==0:
+        name="No title found"
+        results_per_url.append(name)
     else:
-        name_2_single=name_box_2.pop()
-        name_2=name_2_single.text.strip()
-        results_per_url.append(name_2)
-    price_box_2=soup.select(str(c))
-    if len(price_box_2)==0:
-        price_2="No price found"
-        results_per_url.append(price_2)
+        name_single=name_box.pop(0)
+        name=name_single.text.strip()
+        results_per_url.append(name)
+    price_box=soup.select(str(product_element[3]))
+    if len(price_box)==0:
+        price="No price found"
+        results_per_url.append(price)
     else:
-        price_2_test= price_box_2.pop()
-        price_2=price_2_test.text.strip()
-        results_per_url.append(price_2)
-    avail_box_2=soup.select(str(d))
-    if len(avail_box_2)==0:
-        avail_2="No availibility found"
-        results_per_url.append(avail_2)
+        price_test= price_box.pop(0)
+        price=price_test.text.strip()
+        results_per_url.append(price)
+    avail_box=soup.select(str(product_element[4]))
+    if len(avail_box)==0:
+        avail="No availibility found"
+        results_per_url.append(avail)
     else:
-        avail_2_single=avail_box_2.pop()
-        avail_2=avail_2_single.text.strip()
-        results_per_url.append(avail_2)
+        avail_single=avail_box.pop(0)
+        avail=avail_single.text.strip()
+        results_per_url.append(avail)
     timestamp=datetime.datetime.now()
-    results_per_url.append(timestamp)
-    print("\n\nProduct title: "+name_2)
-    print("\nPrice found: " +price_2)
-    print("\nAvailability: " +avail_2)
-    print(datetime.datetime.now())
+    string_time = timestamp.strftime('%Y-%m-%d %H-%M-%S')
+    results_per_url.append(string_time)
     total_results.append(results_per_url)
 
 print(total_results)
 
-data_CSV.to_csv('last_checked.csv')
-with open('last_checked.csv', 'w') as f:
-    writer= csv.writer(f)
-    for i in total_results:
-        writer.writerow(i)
+#removing old rows from last checked table
+mycursor.execute("TRUNCATE TABLE results_last_checked")
+
+#inserting new rows into results_last_checked
+sql="INSERT INTO results_last_checked(url_id, product_title, last_price, last_availability, date_last_checked) VALUES(%s,%s,%s,%s,%s)"
+insert_rows=mycursor.executemany(sql, total_results)
+print(mycursor.rowcount, " lines were inserted")
+
+#commiting changes and closing connection
+mydb.commit()
+mydb.close()
