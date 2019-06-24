@@ -10,7 +10,8 @@ mydb=mysql.connect(
     host='localhost',
     user='sabrinastobe',
     password='T0bewanken0bi!',
-    database='test_it'
+    database='test_it',
+    port=3307
 )
 
 print(mydb)
